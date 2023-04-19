@@ -35,8 +35,6 @@
     <div v-if="$v.selectedPlan.$error" class="error">
       you should pick a plan to continue
     </div>
-
-    <pre><code>{{$v.selectedPlan}}</code></pre>
   </div>
 </template>
 
@@ -81,6 +79,15 @@ export default {
   methods: {
     pickPlan(plan) {
       this.selectedPlan = plan
+      this.submit()
+    },
+    submit() {
+      this.$emit('update', {
+        data: {
+          plan: this.selectedPlan,
+        },
+        isValid: !this.$v.$invalid,
+      })
     },
   },
 }
