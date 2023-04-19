@@ -1,24 +1,13 @@
-# dynamic-forms
+# Dynamic Forms with Vue.js
 
-## Project setup
-```
-npm install
-```
+![Demonstration of the app we build in the course](https://i.imgur.com/yO9gGwp.gif)
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+A user should be able to:
 
-### Compiles and minifies for production
-```
-npm run build
-```
+- Pick a Coffee plan
+- Login or create an account
+- Enter her delivery details
+- Select additional monthly treats
+- Confirm her monthly coffee order
 
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+We cover two different communication methods (events and promises) between the mama form and the steps.
