@@ -10,6 +10,7 @@
       <div class="form-group">
         <label class="form-label" for="email">Email</label>
         <input
+          @input="submit"
           type="text"
           v-model="$v.form.email.$model"
           placeholder="your@email.com"
@@ -30,6 +31,7 @@
       <div class="form-group">
         <label class="form-label" for="password">Password</label>
         <input
+          @input="submit"
           v-model="$v.form.password.$model"
           type="password"
           placeholder="Super Secret Password"
@@ -47,6 +49,7 @@
       <div class="form-group">
         <label class="form-label" for="name">Name</label>
         <input
+          @input="submit"
           v-model="$v.form.name.$model"
           type="text"
           placeholder="What should we call you?"
@@ -73,6 +76,7 @@ export default {
       },
     }
   },
+
   validations: {
     form: {
       email: {
@@ -85,6 +89,18 @@ export default {
       name: {
         required,
       },
+    },
+  },
+  methods: {
+    submit() {
+      this.$emit('update', {
+        data: {
+          email: this.form.email,
+          password: this.form.password,
+          name: this.form.name,
+        },
+        isValid: !this.$v.$invalid,
+      })
     },
   },
 }
