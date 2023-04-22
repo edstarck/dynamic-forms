@@ -6,7 +6,7 @@
       Create an account or log in to order your liquid gold subscription
     </h2>
 
-    <form v-if="!loggedIn" class="form" @input="submit">
+    <form v-if="!loggedIn" class="form">
       <pre>
         <code>
           {
@@ -19,13 +19,16 @@
       <div class="form-group">
         <label class="form-label" for="email">Email</label>
         <input
-          @blur="checkIfUserExists"
           type="text"
           v-model="$v.form.email.$model"
+          :disabled="emailCheckedInDB"
           placeholder="your@email.com"
           class="form-control"
           id="email"
         />
+        <div v-if="emailCheckedInDB" class="error info">
+          <a href="#" @click="reset">Not you?</a>
+        </div>
         <div
           v-if="$v.form.email.$error && !$v.form.email.required"
           class="error"
@@ -58,10 +61,6 @@
         >
           password is invalid - try again
         </div>
-      </div>
-
-      <div v-if="existingUser" class="form-group">
-        <button @click.prevent="login" class="btn">Login</button>
       </div>
 
       <div v-if="emailCheckedInDB && !existingUser" class="form-group">
@@ -129,54 +128,85 @@ export default {
       this.$v.$reset()
     },
     submit() {
-      this.$emit('update', {
-        data: {
+      let job
+
+      if (!this.emailCheckedInDB) {
+        this.$v.form.email.$touch()
+        job = this.checkIfUserExists()
+      } else {
+        if (this.existingUser && !this.loggedIn) {
+          this.$v.form.password.$touch()
+          job = this.login()
+        } else {
+          this.$v.$touch()
+          job = Promise.resolve()
+        }
+      }
+
+      return new Promise((resolve, reject) => {
+        const isValid = !this.$v.$invalid
+        const data = {
           email: this.form.email,
           password: this.form.password,
           name: this.form.name,
-        },
-        isValid: !this.$v.$invalid,
+        }
+        const error = 'data is not valid yet'
+
+        job
+          .then(() => {
+            if (isValid) {
+              resolve(data)
+            } else {
+              reject(error)
+            }
+          })
+          .catch(() => reject(error))
       })
     },
     async checkIfUserExists() {
       this.$emit('updateAsyncState', 'pending')
-      if (this.$v.form.email.$invalid) return false
+      if (!this.$v.form.email.$invalid) {
+        try {
+          // user exist
+          await apiAuth.checkIfUserExistsInDB(this.form.email)
+          this.$emit('updateAsyncState', 'success')
 
-      try {
-        // user exist
-        await apiAuth.checkIfUserExistsInDB(this.form.email)
-        this.$emit('updateAsyncState', 'success')
+          this.emailCheckedInDB = true
+          this.existingUser = true
+        } catch (error) {
+          // user doesn`t exist
 
-        this.emailCheckedInDB = true
-        this.existingUser = true
-      } catch (error) {
-        // user doesn`t exist
-
-        this.$emit('updateAsyncState', 'success')
-        this.emailCheckedInDB = true
-        this.existingUser = false
+          this.$emit('updateAsyncState', 'success')
+          this.emailCheckedInDB = true
+          this.existingUser = false
+        }
+      } else {
+        return Promise.reject('email is invalid')
       }
     },
     async login() {
+      this.wrongPassword = false
+
       this.$emit('updateAsyncState', 'pending')
-      if (this.$v.form.password.$invalid) return false
+      if (!this.$v.form.password.$invalid) {
+        try {
+          // logged in
+          const user = await apiAuth.authenticateUser(
+            this.form.email,
+            this.form.password
+          )
 
-      try {
-        // logged in
-        const user = await apiAuth.authenticateUser(
-          this.form.email,
-          this.form.password
-        )
+          this.$emit('updateAsyncState', 'success')
+          this.form.name = user.name
+        } catch (error) {
+          // wrong password
+          this.$emit('updateAsyncState', 'success')
+          this.wrongPassword = true
 
-        this.$emit('updateAsyncState', 'success')
-        this.form.name = user.name
-        this.submit()
-      } catch (error) {
-        // wrong password
-        this.$emit('updateAsyncState', 'success')
-        this.wrongPassword = true
-
-        console.log('error', error)
+          console.log('error', error)
+        }
+      } else {
+        return Promise.reject('login or password are wrong')
       }
     },
   },

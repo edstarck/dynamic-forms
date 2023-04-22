@@ -6,7 +6,6 @@
           ref="currentStep"
           :is="currentStep"
           :wizzard-data="form"
-          @update="processStep"
           @updateAsyncState="updateAsyncState"
         ></component>
       </keep-alive>
@@ -23,7 +22,7 @@
         >
           Back
         </button>
-        <button @click="nextButtonAction" class="btn" :disabled="!canGoNext">
+        <button @click="nextButtonAction" class="btn">
           {{ isLastStep ? 'Completed Order' : 'Next' }}
         </button>
       </div>
@@ -72,7 +71,6 @@ export default {
         'FormReviewOrder',
       ],
       currentStepNumber: 1,
-      canGoNext: false,
       asyncState: null,
       form: {
         plan: null,
@@ -105,7 +103,15 @@ export default {
   },
   methods: {
     nextButtonAction() {
-      this.isLastStep ? this.submit() : this.goNext()
+      this.$refs.currentStep
+        .submit()
+        .then((stepData) => {
+          Object.assign(this.form, stepData)
+          this.isLastStep ? this.submit() : this.goNext()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     },
     submit() {
       this.asyncState = 'pending'
@@ -121,22 +127,11 @@ export default {
           console.log('error', error)
         })
     },
-    processStep(step) {
-      Object.assign(this.form, step.data)
-      this.canGoNext = step.isValid
-    },
     goBack() {
       this.currentStepNumber--
-      this.canGoNext = true
     },
     goNext() {
       this.currentStepNumber++
-      // this.canGoNext = false
-
-      this.$nextTick(() => {
-        // this.$refs.currentStep.submit()
-        this.canGoNext = !this.$refs.currentStep.$v.$invalid
-      })
     },
     updateAsyncState(state) {
       this.asyncState = state
@@ -144,6 +139,3 @@ export default {
   },
 }
 </script>
-
-<!-- TODO: -->
-<!-- доделать disabled в форме -->

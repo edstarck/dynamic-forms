@@ -34,7 +34,6 @@
       <div class="options">
         <div class="option">
           <input
-            @input="submit"
             v-model="form.chocolate"
             type="checkbox"
             value="chocolate"
@@ -46,7 +45,6 @@
         </div>
         <div class="option">
           <input
-            @input="submit"
             v-model="form.otherTreat"
             type="checkbox"
             value="chocolate"
@@ -110,12 +108,9 @@ export default {
 
   methods: {
     submit() {
-      this.$emit('update', {
-        data: {
-          chocolate: this.form.chocolate,
-          otherTreat: this.form.otherTreat,
-        },
-        isValid: true,
+      return Promise.resolve({
+        chocolate: this.form.chocolate,
+        otherTreat: this.form.otherTreat,
       })
     },
   },
