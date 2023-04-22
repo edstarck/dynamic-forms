@@ -10,7 +10,6 @@
       <div class="form-group">
         <label class="form-label" for="delivery_name">Name</label>
         <input
-          @input="submit"
           v-model="$v.form.recipient.$model"
           type="text"
           placeholder="Recipients Name"
@@ -25,7 +24,6 @@
       <div class="form-group">
         <label class="form-label" for="address">Address</label>
         <textarea
-          @input="submit"
           v-model="$v.form.address.$model"
           placeholder="London Street 470978 New England"
           rows="3"
@@ -69,12 +67,17 @@ export default {
   },
   methods: {
     submit() {
-      this.$emit('update', {
-        data: {
+      this.$v.$touch()
+
+      return new Promise((resolve, reject) => {
+        const isValid = !this.$v.$invalid
+        const data = {
           address: this.form.address,
           recipient: this.form.recipient,
-        },
-        isValid: !this.$v.$invalid,
+        }
+        const error = 'adress must be required'
+
+        isValid ? resolve(data) : reject(error)
       })
     },
   },
