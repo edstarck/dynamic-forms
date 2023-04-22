@@ -1,8 +1,7 @@
 import {user} from '@/config'
 
-const login = (email, password) => {
+const authenticateUser = (email, password) => {
   return new Promise((resolve, reject) => {
-    console.log(email === user.email && password === user.password)
     setTimeout(() => {
       if (email === user.email && password === user.password) {
         resolve({
@@ -17,6 +16,7 @@ const login = (email, password) => {
 }
 
 const checkIfUserExistsInDB = (email) => {
+  console.log('email', email)
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (email === user.email) {
@@ -35,10 +35,7 @@ const postFormToDB = (form) => {
 }
 
 export default {
-  login,
+  authenticateUser,
   checkIfUserExistsInDB,
   postFormToDB,
 }
-
-// TODO:
-// разнести это API по разным модулям

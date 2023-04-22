@@ -1,12 +1,13 @@
 <template>
   <div>
-    <div v-if="wizzardInProgress">
+    <div v-if="wizzardInProgress" v-show="asyncState !== 'pending'">
       <keep-alive>
         <component
           ref="currentStep"
           :is="currentStep"
           :wizzard-data="form"
           @update="processStep"
+          @updateAsyncState="updateAsyncState"
         ></component>
       </keep-alive>
 
@@ -27,6 +28,7 @@
         </button>
       </div>
     </div>
+
     <div v-else>
       <h1 class="title">Thank you!</h1>
       <h2 class="subtitle">We look forward to shipping you your first box!</h2>
@@ -34,6 +36,13 @@
       <p class="text-center">
         <a href="" target="_blank" class="btn">Go somewhere cool!</a>
       </p>
+    </div>
+
+    <div class="loading-wrapper" v-if="asyncState === 'pending'">
+      <div class="loader">
+        <img src="/spinner.svg" alt="" />
+        <p>Please wait, we`re hitting our servers!</p>
+      </div>
     </div>
   </div>
 </template>
@@ -64,6 +73,7 @@ export default {
       ],
       currentStepNumber: 1,
       canGoNext: false,
+      asyncState: null,
       form: {
         plan: null,
         email: null,
@@ -98,13 +108,16 @@ export default {
       this.isLastStep ? this.submit() : this.goNext()
     },
     submit() {
+      this.asyncState = 'pending'
+
       apiAuth
         .postFormToDB(this.form)
-        .then((response) => {
-          console.log('response', response)
+        .then(() => {
+          this.asyncState = 'success'
           this.currentStepNumber++
         })
         .catch((error) => {
+          this.asyncState = 'success'
           console.log('error', error)
         })
     },
@@ -124,6 +137,9 @@ export default {
         // this.$refs.currentStep.submit()
         this.canGoNext = !this.$refs.currentStep.$v.$invalid
       })
+    },
+    updateAsyncState(state) {
+      this.asyncState = state
     },
   },
 }
